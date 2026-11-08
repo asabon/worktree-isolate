@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     worktree-isolate スキルを Antigravity のグローバルスキルディレクトリへデプロイするスクリプト
 
@@ -42,6 +42,24 @@ $DestDir = if ($Dest) { $Dest } else {
 }
 $InfoFile = Join-Path $DestDir ".deploy-info.json"
 
+function Get-SkillVersion([string]$dir) {
+    $pkgPath = Join-Path $RepoRoot "package.json"
+    if (Test-Path $pkgPath) {
+        try {
+            $pkg = Get-Content $pkgPath -Raw | ConvertFrom-Json
+            if ($pkg.version) { return $pkg.version }
+        } catch {}
+    }
+    $skillPath = Join-Path $dir "SKILL.md"
+    if (Test-Path $skillPath) {
+        $content = Get-Content $skillPath -Raw
+        if ($content -match '(?m)^\s*version:\s*["'']?([^"''\s]+)["'']?') {
+            return $Matches[1]
+        }
+    }
+    return "unknown"
+}
+
 # --- Status Display ---
 if ($Status) {
     Write-Host "`nChecking deployed worktree-isolate skill status..." -ForegroundColor Cyan
@@ -62,6 +80,7 @@ if ($Status) {
         try {
             $info = Get-Content $InfoFile -Raw | ConvertFrom-Json
             Write-Host "Status:      ✅ Deployed" -ForegroundColor Green
+            Write-Host "Version:     $($info.version)" -ForegroundColor Yellow
             Write-Host "Mode:        $(if ($info.mode -eq 'worktree') { '🛠️ Worktree (WIP changes included)' } else { '📦 Git snapshot' })"
             Write-Host "Source Ref:  $($info.ref) ($($info.commit))"
             if ($info.commitMessage) {
@@ -79,7 +98,10 @@ if ($Status) {
 
 # --- Deployment ---
 
+$version = Get-SkillVersion -dir $SkillSourceDir
+
 Write-Host "`n📦 Deploying worktree-isolate skill to Antigravity global directory..." -ForegroundColor Cyan
+Write-Host "Version:     $version" -ForegroundColor Yellow
 Write-Host "Source:      $SkillSourceDir"
 Write-Host "Destination: $DestDir"
 if ($DryRun) {
@@ -91,6 +113,7 @@ if (-not (Test-Path $SkillSourceDir)) {
 }
 
 $deployInfo = @{
+    version    = $version
     deployedAt = (Get-Date).ToString("o")
     mode       = if ($Wip) { "worktree" } else { "git-ref" }
 }

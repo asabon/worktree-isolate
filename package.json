@@ -1,0 +1,11 @@
+{
+  "name": "worktree-isolate",
+  "version": "0.1.0",
+  "description": "Antigravity skill for isolating AI agent sessions via git worktree",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1",
+    "deploy:wip": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -Wip",
+    "deploy:status": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -Status"
+  }
+}

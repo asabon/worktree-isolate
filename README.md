@@ -26,14 +26,20 @@ AI エージェントのセッションごとに `git worktree` を用いて作�
 
 ```text
 e:\work\worktree-isolate\               # 【スキル開発リポジトリ】
+├── .agents\                            # リポジトリ開発用ハーネス
+│   └── skills\
+│       ├── prepare-release\SKILL.md    # リリース準備スキル
+│       └── publish-release\SKILL.md    # リリース公開スキル
 ├── .gitignore                          # "/.worktrees/" を除外設定
 ├── AGENTS.md                           # 本リポジトリ開発用エージェント指示書
+├── CHANGELOG.md                        # バージョン履歴
+├── package.json                        # バージョン管理
 ├── README.md                           # 本ドキュメント
 ├── scripts\
 │   └── deploy.ps1                      # Antigravity グローバルスキルへのデプロイスクリプト
 └── skills\
     └── worktree-isolate\               # 【配布・デプロイされるスキル本体】
-        ├── SKILL.md                    # Antigravity 用 Skill 定義
+        ├── SKILL.md                    # Antigravity 用 Skill 定義 (metadata.version)
         └── scripts\
             └── wt.ps1                  # コア実行スクリプト（セッション追跡・worktree操作）
 ```
@@ -97,6 +103,15 @@ powershell -File $WT cleanup -Merged
 # または個別削除
 powershell -File $WT cleanup -Branch "feat/my-new-feature"
 ```
+
+## リポジトリ開発・リリース運用
+
+本リポジトリでは、AI エージェントと協調してバージョン管理・リリース作業を行うためのスキルが `.agents/skills/` に常備されています：
+
+- **`prepare-release` スキル**:
+  - 「リリース準備して」と指示することで、直前タグからのコミット解析、バージョン更新（`package.json`, `SKILL.md`, `CHANGELOG.md`）、GitHub Draft Release 作成、リリース PR 発行までを自動実行。
+- **`publish-release` スキル**:
+  - PR マージ後に「公開して」と指示することで、リリースタグの push、GitHub Release の正式公開、および `deploy.ps1` による Antigravity グローバル環境への最新版デプロイを自動実行。
 
 ## 今後の拡張予定
 - macOS / Linux 向けの Bash スクリプト（`scripts/wt.sh`）の追加

@@ -1,6 +1,8 @@
 ---
 name: worktree-isolate
 description: AI エージェントのセッションごとに git worktree を作成して作業環境を隔離し、セッション自動特定・PR作成・レビュー指摘対応・マージ後クリーンアップまでを支援するスキル。
+metadata:
+  version: "0.1.0"
 ---
 
 # worktree-isolate Skill
