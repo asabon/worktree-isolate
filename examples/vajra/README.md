@@ -41,18 +41,31 @@ flowchart TD
 
 ## 導入手順
 
-### 1. グローバルスキルの準備
-`vajra` と `worktree-isolate` の両方を Antigravity のグローバルスキルに配置します：
+### 1. グローバルスキルの準備（目指す状態）
+
+Antigravity で **`vajra`** と **`worktree-isolate`** の両方がスキル（スラッシュコマンドなど）として呼び出せるよう、グローバルスキル領域（`~/.gemini/config/skills/`）に配置します。
+
+#### worktree-isolate の配置
+本リポジトリに同梱されているデプロイスクリプトを実行することで、一発でグローバルスキル領域へ配置できます：
 
 ```powershell
-# worktree-isolate のデプロイ
 cd /path/to/worktree-isolate
 .\scripts\deploy.ps1
-
-# vajra のデプロイ
-cd /path/to/vajra
-.\scripts\deploy.ps1
 ```
+
+#### vajra の配置
+vajra をグローバルスキルとして配置します。公式の `skills` CLI を利用するか、Antigravity 対応ブランチのスキルフォルダを配置してください：
+
+```bash
+# 公式 CLI でグローバルインストールする場合
+npx skills add zwire/vajra -g
+
+# または、ローカルリポジトリからスキルフォルダを手動で配置する場合
+Copy-Item -Recurse -Force "/path/to/vajra/skills/vajra" "$HOME\.gemini\config\skills\vajra"
+```
+
+> [!TIP]
+> Antigravity のチャット入力欄で `/` をタイプし、`/vajra` および `/worktree-isolate` が候補に表示されれば準備完了です。
 
 ### 2. プロジェクトへの Playbook の配置
 対象プロジェクトの vajra ワークフローディレクトリ（例: `.agents/skills/your-flow/playbooks/`）に、本ディレクトリの Playbook を配置します：
