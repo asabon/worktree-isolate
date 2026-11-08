@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     worktree-isolate スキルを Antigravity のグローバルスキルディレクトリへデプロイするスクリプト
 
@@ -147,7 +147,8 @@ if ($Wip) {
     Write-Host "Mode:        📦 Git snapshot ($refToUse @ $commitHash)" -ForegroundColor Green
 
     # 未コミット差分の存在通知
-    $uncommitted = (git -C $RepoRoot status --porcelain skills/worktree-isolate).Trim()
+    $statusOutput = git -C $RepoRoot status --porcelain skills/worktree-isolate
+    $uncommitted = if ($statusOutput) { ($statusOutput -join "`n").Trim() } else { "" }
     if ($uncommitted -and -not $Ref) {
         Write-Host "⚠️ Notice:    Uncommitted changes exist in skills/worktree-isolate." -ForegroundColor Yellow
         Write-Host "              Deploying last committed state ($commitHash)." -ForegroundColor Yellow
