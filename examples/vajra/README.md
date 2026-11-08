@@ -41,31 +41,45 @@ flowchart TD
 
 ## 導入手順
 
-### 1. グローバルスキルの準備（目指す状態）
+### 1. スキルの準備（目指す状態）
 
-Antigravity で **`vajra`** と **`worktree-isolate`** の両方がスキル（スラッシュコマンドなど）として呼び出せるよう、グローバルスキル領域（`~/.gemini/config/skills/`）に配置します。
+Antigravity で **`vajra`**（または vajra で生成したワークフロー）と **`worktree-isolate`** の両方がスキル（スラッシュコマンドなど）として呼び出せる状態を作ります。
+運用の都合に合わせて **「プロジェクトローカル配置（推奨）」** または **「グローバル配置」** のいずれかを選択できます。
 
-#### worktree-isolate の配置
-本リポジトリに同梱されているデプロイスクリプトを実行することで、一発でグローバルスキル領域へ配置できます：
+---
 
-```powershell
-cd /path/to/worktree-isolate
-.\scripts\deploy.ps1
-```
+#### 選択肢 A: プロジェクトローカル配置（推奨・自己完結型）
+プロジェクト直下の `.agents/skills/` にスキルを配置して Git にコミットします。  
+チームメンバーや CI、別 PC で clone した場合でも、**事前の環境設定なしで即座に Rails と worktree 隔離が有効** になります。
 
-#### vajra の配置
-vajra をグローバルスキルとして配置します。公式の `skills` CLI を利用するか、Antigravity 対応ブランチのスキルフォルダを配置してください：
+- **`worktree-isolate` の配置**:  
+  本リポジトリの `skills/worktree-isolate` を、対象プロジェクトの `.agents/skills/worktree-isolate` にコピーします。
+- **vajra ワークフローの配置**:  
+  対象プロジェクト内で `/vajra` を実行してワークフローを生成するか、生成済みのワークフロースキルを `.agents/skills/<your-flow>/` に配置します。
 
-```bash
-# 公式 CLI でグローバルインストールする場合
-npx skills add zwire/vajra -g
+---
 
-# または、ローカルリポジトリからスキルフォルダを手動で配置する場合
-Copy-Item -Recurse -Force "/path/to/vajra/skills/vajra" "$HOME\.gemini\config\skills\vajra"
-```
+#### 選択肢 B: グローバル配置（PC全体での共用型）
+自分のマシン上のあらゆるリポジトリで使い回したい場合は、グローバルスキル領域（`~/.gemini/config/skills/`）に配置します。
+
+- **`worktree-isolate` の配置**:
+  ```powershell
+  cd /path/to/worktree-isolate
+  .\scripts\deploy.ps1
+  ```
+- **`vajra` の配置**:
+  ```bash
+  # 公式 CLI でグローバルインストールする場合
+  npx skills add zwire/vajra -g
+
+  # または、ローカルリポジトリからスキルフォルダを配置する場合
+  Copy-Item -Recurse -Force "/path/to/vajra/skills/vajra" "$HOME\.gemini\config\skills\vajra"
+  ```
 
 > [!TIP]
-> Antigravity のチャット入力欄で `/` をタイプし、`/vajra` および `/worktree-isolate` が候補に表示されれば準備完了です。
+> Antigravity のチャット入力欄で `/` をタイプし、ワークフロースキル（または `/vajra`）および `/worktree-isolate` が候補に表示されれば準備完了です。
+
+---
 
 ### 2. プロジェクトへの Playbook の配置
 対象プロジェクトの vajra ワークフローディレクトリ（例: `.agents/skills/your-flow/playbooks/`）に、本ディレクトリの Playbook を配置します：
