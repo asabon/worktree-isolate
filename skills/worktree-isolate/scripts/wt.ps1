@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     git worktree を用いた環境隔離支援スクリプト (worktree-isolate)
 
