@@ -1,8 +1,8 @@
 ---
 name: worktree-isolate
-description: AI エージェントのセッションごとに git worktree を作成して作業環境を隔離し、セッション自動特定・PR作成・レビュー指摘対応・マージ後クリーンアップまでを支援するスキル。
+description: AI エージェントのセッションごとに git worktree を作成して作業環境を隔離し、セッション自動特定・PR作成・レビュー指摘対応・マージ後クリーンアップまでを支援するスキル。vajra の Rails（フック）と連携してメインツリーの誤編集を物理的にブロックすることも可能。
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # worktree-isolate Skill
@@ -11,7 +11,7 @@ metadata:
 Antigravity 等の AI セッション ID（Conversation ID）と紐付けることで、セッション切り替え時にも迷わず自分の作業環境を自動特定できます。
 
 ## 適用タイミング
-- ユーザーから機能追加、バグ修正、リファクタリングなどの作業を依頼されたとき
+- ユーザーから機能追加、バグ修正、リファクタリングなどのコード変更を依頼されたとき
 - 既存セッションを再開したとき（以前の worktree を自動特定）
 - 既存の PR に対するレビュー指摘や追加修正を行うとき
 - マージ済みの作業環境を整理（クリーンアップ）するとき
@@ -28,16 +28,16 @@ Antigravity 等の AI セッション ID（Conversation ID）と紐付けるこ�
 
 ---
 
-## コアスクリプトの実行パス
+## スクリプトパスの解決方法
 
-本スキルに同梱されている実行スクリプト `wt.ps1` を使用します。環境に応じて以下のいずれかのパスで実行してください：
+本スキルに同梱されている実行スクリプト `wt.ps1` を使用します。グローバルインストール環境またはローカル開発環境のいずれでも確実に動作するよう、以下のフォールバックを用いて解決します：
 
 ```powershell
-# 1. グローバルスキルとしてインストールされている場合（標準）
-$WT_CMD = "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1"
-
-# 2. 本リポジトリの開発中にローカルから直接実行する場合
-$WT_CMD = ".\skills\worktree-isolate\scripts\wt.ps1"
+$WT = if (Test-Path "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1") {
+    "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1"
+} else {
+    git rev-parse --show-toplevel | ForEach-Object { "$_\skills\worktree-isolate\scripts\wt.ps1" }
+}
 ```
 
 ---
@@ -49,7 +49,7 @@ $WT_CMD = ".\skills\worktree-isolate\scripts\wt.ps1"
 セッションが開始されたら、まず現在のセッション ID（Conversation ID）に紐づく既存の作業ツリーがあるか確認します。
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" current -SessionId "<conversation-id>"
+powershell -ExecutionPolicy Bypass -File $WT current -SessionId "<conversation-id>"
 ```
 
 - **既存の worktree が見つかった場合**:
@@ -65,7 +65,7 @@ powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-i
 ユーザーが worktree 隔離を選択した場合、人間が見て分かりやすいブランチ名を命名し、`-SessionId` を指定して `create` を実行します。
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" create -Branch "<type>/<descriptive-name>" -SessionId "<conversation-id>"
+powershell -ExecutionPolicy Bypass -File $WT create -Branch "<type>/<descriptive-name>" -SessionId "<conversation-id>"
 ```
 - 命名例: `feat/user-auth`, `fix/login-button-style`, `refactor/api-client`
 - スクリプトは対象リポジトリ直下の `.worktrees/<sanitized-name>` に独立した作業ツリーを作成し、セッション ID と紐付けます。
@@ -86,7 +86,7 @@ git commit -m "feat: implement user authentication flow"
 実装とテストが完了したら、PR を作成します。
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" pr -Title "<PRタイトル>" -Body "<PR概要・変更点>"
+powershell -ExecutionPolicy Bypass -File $WT pr -Title "<PRタイトル>" -Body "<PR概要・変更点>"
 ```
 - リモートへのプッシュおよび GitHub PR の作成が行われます。
 - **PR 作成後、worktree は削除されずに保持されます**。
@@ -98,10 +98,10 @@ powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-i
 
 ```powershell
 # セッションIDから再開する場合
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" resume -SessionId "<conversation-id>"
+powershell -ExecutionPolicy Bypass -File $WT resume -SessionId "<conversation-id>"
 
 # ブランチ名を直接指定して再開する場合
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" resume -Branch "<type>/<descriptive-name>"
+powershell -ExecutionPolicy Bypass -File $WT resume -Branch "<type>/<descriptive-name>"
 ```
 
 ### 6. クリーンアップ（マージ後の後片付け）
@@ -110,10 +110,10 @@ PR がマージされた後、不要になった worktree を削除します。
 
 ```powershell
 # マージ済みの worktree を一括削除
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" cleanup -Merged
+powershell -ExecutionPolicy Bypass -File $WT cleanup -Merged
 
 # または特定のブランチの worktree を個別削除
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" cleanup -Branch "<type>/<descriptive-name>"
+powershell -ExecutionPolicy Bypass -File $WT cleanup -Branch "<type>/<descriptive-name>"
 ```
 
 ### 7. 一覧確認
@@ -121,5 +121,14 @@ powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-i
 現在アクティブな worktree と、紐づくセッション、PR ステータス（Open / Merged）を確認したい場合：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$HOME\.gemini\config\skills\worktree-isolate\scripts\wt.ps1" list
+powershell -ExecutionPolicy Bypass -File $WT list
 ```
+
+---
+
+## ⚡ vajra 連携（Rails 強制力モード）
+
+ワークフローエンジン `vajra` と組み合わせることで、**「メインツリーの誤編集をフックで物理的にブロック（PreToolUse deny）」** する強力な強制力を発揮できます。
+
+- vajra の Playbook に `writes: [".worktrees/**"]` を定義することで、エージェントがメインツリーのファイルを編集しようとした瞬間にフックが遮断します。
+- 詳細は [examples/vajra/README.md](file:///e:/work/worktree-isolate/examples/vajra/README.md) を参照してください。

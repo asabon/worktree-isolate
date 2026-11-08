@@ -21,6 +21,7 @@ AI エージェントのセッションごとに `git worktree` を用いて作�
 - **セッション自動追跡**: AI の Conversation ID と worktree を紐付け管理。セッション切り替え時でも自分の環境を即座に自動特定（`current` / `resume`）。
 - **レビュー指摘への対応 (Resume)**: PR 作成後も環境を保持し、指摘が入った際は即座にその環境で作業を再開可能。
 - **安全なクリーンアップ**: PR がマージされた後にマージ済みの環境を一括削除（`cleanup -Merged`）。
+- **⚡ vajra Rails 連携**: ワークフローエンジン `vajra` と組み合わせることで、メインツリーへの直接変更をフック（`PreToolUse`）で物理的に遮断（deny）し、確実な隔離運用を強制可能。
 
 ## ディレクトリ構成
 
@@ -33,6 +34,10 @@ e:\work\worktree-isolate\               # 【スキル開発リポジトリ】
 ├── .gitignore                          # "/.worktrees/" を除外設定
 ├── AGENTS.md                           # 本リポジトリ開発用エージェント指示書
 ├── CHANGELOG.md                        # バージョン履歴
+├── examples\
+│   └── vajra\                          # vajra Rails 連携サンプル
+│       ├── README.md                   # 連携ガイド・フック解説
+│       └── playbooks\                  # 隔離作業・クリーンアップ用 Playbook
 ├── package.json                        # バージョン管理
 ├── README.md                           # 本ドキュメント
 ├── scripts\
@@ -103,6 +108,19 @@ powershell -File $WT cleanup -Merged
 # または個別削除
 powershell -File $WT cleanup -Branch "feat/my-new-feature"
 ```
+
+---
+
+## ⚡ vajra との連携（最強の強制力 Rails モード）
+
+AGENTS.md やプロンプトによる指示だけでは、AI エージェントがうっかりメインツリーのファイルを編集してしまうリスクが残ります。
+ワークフローエンジン **`vajra`** と組み合わせることで、**「メインツリーの直接編集を Antigravity のフックで物理的にブロックする」** という鉄壁のガード（Rails）を敷くことができます。
+
+- Playbook で `writes: [".worktrees/**"]` を指定
+- AI がメインツリーのファイルを `edit_file` / `write_file` しようとすると、フックが即座に拒絶（`{ decision: "deny" }`）
+- 詳細な導入手順やサンプル Playbook は [examples/vajra/README.md](examples/vajra/README.md) を参照してください。
+
+---
 
 ## リポジトリ開発・リリース運用
 
