@@ -79,3 +79,4 @@ description: Prepare a release for worktree-isolate. Analyzes commits and diffs 
 
 6. **ユーザーへの報告**:
    - 作成した PR の URL と、GitHub Draft Release の状態をユーザーに報告します。
+

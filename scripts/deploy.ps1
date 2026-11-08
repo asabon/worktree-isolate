@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     worktree-isolate スキルを Antigravity のグローバルスキルディレクトリへデプロイするスクリプト
 

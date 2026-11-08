@@ -79,3 +79,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy.ps1
 - リリースタグ: `vX.Y.Z`
 - GitHub Release URL: `https://github.com/:owner/:repo/releases/tag/vX.Y.Z`
 - グローバルスキルへの最新版デプロイ完了の旨
+
